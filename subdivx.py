@@ -6,7 +6,10 @@ import urllib
 import argparse
 import os
 import re
-from bs4 import BeautifulSoup
+try:
+    from bs4 import BeautifulSoup
+except ImportError:
+    print 'Es necesaria la biblioteca bs4'
 
 def getArgs():
     
