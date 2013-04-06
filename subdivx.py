@@ -17,12 +17,17 @@ def getArgs():
     args.add_argument('titulo',nargs='*', help='Titulo de la pelicula')
     title = args.parse_args();
     title = vars(title);
-    return title
+    title = ' '.join(title['titulo']);
+
+    if len(title) <= 1:
+        args.print_help()
+        exit()
+    else:
+        return title
 
 def getHTML(title):
 
-    param = ' '.join(title['titulo'])
-    param = urllib.pathname2url(param)
+    param = urllib.pathname2url(title)
     url = 'http://subdivx.com/index.php?buscar=',param,'&accion=5&subtitulos=1'
     req = Request(''.join(url))
 
