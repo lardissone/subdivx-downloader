@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-#imports
+# imports
 from urllib2 import Request, urlopen, URLError, HTTPError
 import urllib
 import argparse
@@ -11,13 +11,15 @@ try:
 except ImportError:
     print 'Es necesaria la biblioteca bs4'
 
-def getArgs():
-    
-    args  = argparse.ArgumentParser(description='Descargar subtitulos de www.subdivx.com')
-    args.add_argument('titulo',nargs='*', help='Titulo de la pelicula')
-    title = args.parse_args();
-    title = vars(title);
-    title = ' '.join(title['titulo']);
+
+def get_args():
+
+    args = argparse.ArgumentParser(
+        description='Descargar subtitulos de www.subdivx.com')
+    args.add_argument('titulo', nargs='*', help='Titulo de la pelicula')
+    title = args.parse_args()
+    title = vars(title)
+    title = ' '.join(title['titulo'])
 
     if len(title) <= 1:
         args.print_help()
@@ -25,11 +27,12 @@ def getArgs():
     else:
         return title
 
-def getHTML(title):
+
+def get_html(title):
 
     param = urllib.pathname2url(title)
-    url = 'http://subdivx.com/index.php?buscar=',param,'&accion=5&subtitulos=1'
-    req = Request(''.join(url))
+    url = 'http://subdivx.com/index.php?buscar=%s&accion=5&subtitulos=1'
+    req = Request(''.join(url % param))
 
     try:
         response = urlopen(req)
@@ -42,111 +45,118 @@ def getHTML(title):
     else:
         return response.read()
 
-def parseHTML(html):
 
-        #Parseo el HTML
+def parse_html(html):
+
+        # Parseo el HTML
         soup = BeautifulSoup(html)
-        
-        #Saco los scripts y estilos
+
+        # Saco los scripts y estilos
         for elem in soup.findAll(['script', 'style']):
             elem.extract()
 
-        #Parseo los titulos
+        # Parseo los titulos
         titles = []
         for c in soup.findAll('a', {'class': 'titulo_menu_izq'}):
-             titles.append(c.string)
+            titles.append(c.string)
 
-        #Parseo las descripciones
+        # Parseo las descripciones
         descriptions = []
         for d in soup.findAll('div', {'id': 'buscador_detalle_sub'}):
             descriptions.append(d.text)
 
-        #Parseo los links
+        # Parseo los links
         links = []
         for l in soup.findAll('a', {'target': 'new', 'rel': 'nofollow'}):
-             links.append(l['href'])
+            links.append(l['href'])
 
         list = {}
-        #Si tengo titulos
+        # Si tengo titulos
         if len(titles) > 0:
-           list['titles']       = titles
-           list['descriptions'] = descriptions
-           list['links']        = links
+            list['titles'] = titles
+            list['descriptions'] = descriptions
+            list['links'] = links
 
-           return list
+            return list
 
         else:
-            #Si no encuentro nada, muero ahi
+            # Si no encuentro nada, muero ahi
             print 'No se encontro nada'
             exit()
 
-def showData(list):        
+
+def show_data(list):
     i = 0
-    #Muestro titulos y descripcion
+    # Muestro titulos y descripcion
     for title in list['titles']:
-        print i,'\t','Titulo: ',title, "\n"
-        print '\t','Descripcion: ',list['descriptions'][i]
-        print '-'*80
+        print '%s\tTitulo: %s' % (i, title)
+        print '\tDescripcion: %s' % list['descriptions'][i]
+        print '-' * 80
         i = i + 1
 
     # Solo necesito la lista de links y el numero de indice
     # los links tienen el mismo orden que los titulos
     return list['links']
 
-def searchSubtitle(title):
-    html  = getHTML(title)
-    list  = parseHTML(html) 
-    links = showData(list)
+
+def search_subtitle(title):
+    html = get_html(title)
+    list = parse_html(html)
+    links = show_data(list)
     return links
 
-def downloadSubtitle(link):
 
-    archName = re.search('[0-9]+', os.path.basename(link));
+def download_subtitle(link):
+
+    archName = re.search('[0-9]+', os.path.basename(link))
     archName = archName.group(0) + '.zip'
-     
+
     try:
         f = urlopen(link)
         print "Bajando ", link
-        
+
         # Open our local file for writing
         with open(archName, "wb") as local_file:
                     local_file.write(f.read())
 
     except HTTPError, e:
-            print "HTTP Error:", e.code, url
+        print "HTTP Error:", e.code, link
     except URLError, e:
-           print "URL Error:", e.reason, url,
-  
+        print "URL Error:", e.reason, link
 
-def chooseAndDownload(links):
+
+def choose_and_download(links):
     while(1):
         try:
             value = input('Escoja un titulo: ')
-        except NameError as e:
+        except NameError:
             print 'Por favor ingrese un numero'
-        except KeyboardInterrupt as e:
-           exit() 
+        except KeyboardInterrupt:
+            exit()
         else:
             try:
                 links[value]
             except IndexError:
-                print 'El numero escogido no se encuentra dentro de los posibles, elija nuevamente'
+                print 'El numero escogido no se encuentra \
+                dentro de los posibles, elija nuevamente'
             else:
-                downloadSubtitle(links[value])
+                download_subtitle(links[value])
                 break
 
-# MAIN #
+# MAIN
 
-#levanto los argumentos
-title = getArgs()
-#Presentacion
-print '''__ __ ____ __ ____ __ __ ____  _| |__  __| (_)_ ____ __  __ ___ _ __  
-\ V  V /\ V  V /\ V  V /(_-< || | '_ \/ _` | \ V /\ \ /_/ _/ _ \ '  \ 
- \_/\_/  \_/\_/  \_/\_(_)__/\_,_|_.__/\__,_|_|\_/ /_\_(_)__\___/_|_|_|  - (c) SubDivX - Todos los derechos reservados'''
-print '''
-Este Script solo devuelve los primeros 20 titulos de la busqueda, si desea una busqueda mas intensiva, por favor dirijase a www.subdivx.com
-'''
-print "\n"
-links = searchSubtitle(title)
-value = chooseAndDownload(links)
+# levanto los argumentos
+title = get_args()
 
+# presentacion
+print '__ __ ____ __ ____ __ __ ____  _| |__  __| (_)_ ____ __  __ ___ _ __'
+print '\ V  V /\ V  V /\ V  V /(_-< || | \'_ \/ _` | \ V /\ \ /_/ _/ _ \ \'\
+  \\'
+print ' \_/\_/  \_/\_/  \_/\_(_)__/\_,_|_.__/\__,_|_|\_/ /_\_(_)__\___/_|_|_|\
+  - (c) SubDivX - Todos los derechos reservados'
+print 'Este Script solo devuelve los primeros 20 titulos de la busqueda, si \
+desea una busqueda mas intensiva, por favor dirijase a www.subdivx.com'
+print '\n'
+
+links = search_subtitle(title)
+value = choose_and_download(links)
