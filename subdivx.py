@@ -105,7 +105,6 @@ def show_data(subs):
     for title in subs['titles']:
         print '%s\tTitulo: %s' % (i, title)
         print '\tDescripcion: %s' % subs['descriptions'][i]
-        print subs['links'][i]
         print '-' * 80
         i = i + 1
 
