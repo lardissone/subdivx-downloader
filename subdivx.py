@@ -9,7 +9,21 @@ import re
 try:
     from bs4 import BeautifulSoup
 except ImportError:
-    print 'Es necesaria la biblioteca bs4'
+    print 'Es necesaria la libreria bs4'
+try:
+    import requests
+except ImportError:
+    print 'Es necesaria la libreria requests'
+try:
+    from pyunpack import Archive
+except ImportError:
+    print 'Es necesaria la libreria pyunpack'
+# required to unpack rar files
+try:
+    import patool
+except ImportError:
+    print 'Es necesaria la libreria patool para poder extraer archivos .rar'
+    print 'Tambien es necesario que tengas los comandos: unrar, rar o 7z'
 
 
 def get_args():
@@ -91,6 +105,7 @@ def show_data(subs):
     for title in subs['titles']:
         print '%s\tTitulo: %s' % (i, title)
         print '\tDescripcion: %s' % subs['descriptions'][i]
+        print subs['links'][i]
         print '-' * 80
         i = i + 1
 
@@ -108,21 +123,30 @@ def search_subtitle(title):
 
 def download_subtitle(link):
 
-    archName = re.search('[0-9]+', os.path.basename(link))
-    archName = archName.group(0) + '.zip'
+    arch_name = re.search('[0-9]+', os.path.basename(link))
 
-    try:
-        f = urlopen(link)
-        print "Bajando ", link
+    types = {
+        'application/x-rar-compressed': '.rar',
+        'application/zip': '.zip',
+    }
 
-        # Open our local file for writing
-        with open(archName, "wb") as local_file:
-                    local_file.write(f.read())
+    r = requests.get(link)
+    if r.status_code == 200:
+        content_type = r.headers['content-type']
+        local_file = arch_name.group(0) + types[content_type]
+        with open(local_file, 'wb') as f:
+            # no itero porque son archivos pequenos
+            f.write(r.content)
+            f.close()
 
-    except HTTPError, e:
-        print "HTTP Error:", e.code, link
-    except URLError, e:
-        print "URL Error:", e.reason, link
+            # extrae el subtitulo en el directorio actual
+            Archive(local_file).extractall('.')
+
+            os.remove(local_file)
+            print '\033[92mSubtitulo descargado!\033[0m'
+
+    else:
+        print 'Error downloading file: %s' % r.reason
 
 
 def choose_and_download(links):
