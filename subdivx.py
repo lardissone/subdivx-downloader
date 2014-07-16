@@ -70,14 +70,14 @@ def parse_html(html):
         for l in soup.findAll('a', {'target': 'new', 'rel': 'nofollow'}):
             links.append(l['href'])
 
-        list = {}
+        subs = {}
         # Si tengo titulos
         if len(titles) > 0:
-            list['titles'] = titles
-            list['descriptions'] = descriptions
-            list['links'] = links
+            subs['titles'] = titles
+            subs['descriptions'] = descriptions
+            subs['links'] = links
 
-            return list
+            return subs
 
         else:
             # Si no encuentro nada, muero ahi
@@ -85,24 +85,24 @@ def parse_html(html):
             exit()
 
 
-def show_data(list):
+def show_data(subs):
     i = 0
     # Muestro titulos y descripcion
-    for title in list['titles']:
+    for title in subs['titles']:
         print '%s\tTitulo: %s' % (i, title)
-        print '\tDescripcion: %s' % list['descriptions'][i]
+        print '\tDescripcion: %s' % subs['descriptions'][i]
         print '-' * 80
         i = i + 1
 
     # Solo necesito la lista de links y el numero de indice
     # los links tienen el mismo orden que los titulos
-    return list['links']
+    return subs['links']
 
 
 def search_subtitle(title):
     html = get_html(title)
-    list = parse_html(html)
-    links = show_data(list)
+    subs = parse_html(html)
+    links = show_data(subs)
     return links
 
 

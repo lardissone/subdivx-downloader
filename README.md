@@ -1,4 +1,4 @@
 subdivx-downloader
 ==================
 
-Aplicacion de consola para descargar subtitulos de subdivx
+Aplicación de consola para descargar subtitulos de Subdivx
